@@ -22,15 +22,14 @@ typedef struct _task {
     int (*TickFct)(int);
 } task;
 
-unsigned long int findGCD( unsigned long int a, unsigned long int b) {
+unsigned long int findGCD (unsigned long int a, unsigned long int b) {
     unsigned long int c;
-    while(1) {
-        c = a%b;
-        if (c == 0) { return b; }
-        a = b;
-        b = c;
+    while(1){
+	c = a%b;
+	if(c==0){return b;}
+	a = b;
+	b = c;
     }
-
     return 0;
 }
 
@@ -98,7 +97,7 @@ int main(void) {
     DDRC = 0xF0; PORTC = 0x0F;
 
     static task task1;
-    task *tasks[] = {&task1};
+    task *tasks[] = {&task1,};
     const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
     const char start = -1;
 

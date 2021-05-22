@@ -1,7 +1,7 @@
 /*	Author: Jack Huang
  *  Partner(s) Name: 
  *	Lab Section:
- *	Assignment: Lab #10  Exercise #3
+ *	Assignment: Lab #10  Exercise #4
  *	Exercise Description: [optional - include for your own benefit]
  *	https://drive.google.com/drive/folders/1JBIqqJb-m900203LVLXI8yLaMciH493w?usp=sharing
  *	I acknowledge all content contained herein, excluding template or example
@@ -82,6 +82,7 @@ int keypad(int state){
 					state = waitnext;
 				}
 				else{
+					temp = 0;
 					state = unlock;
 				}
 			}
@@ -216,13 +217,97 @@ int play(int state){
 	return state;
 }
 
+unsigned int timer2 = 100; 
+unsigned int period2 = 2000;
+
+enum changepassstates{initial1,waitinsert,insertlist,waitinsertlist,setnewarray};
+char temparray[5];
+unsigned char i1=0;
+int changepass(int state){
+	unsigned char t = GetKeypadKey();
+	switch(state){
+		case initial1:
+			t = GetKeypadKey();
+			if(((~PINB & 0x80) == 0x80) && (t == '*')){
+				state = waitinsert;
+			}
+			else{
+				state = initial1;
+			}
+			break;
+		case waitinsert:
+			t = GetKeypadKey();
+			PORTB = 0x02;
+			if(t == '*'){
+				state = waitinsert;
+			}
+			else{
+				state = insertlist;
+			}
+			break;
+		case insertlist:
+			t = GetKeypadKey();
+			PORTB = 0x00;
+			if(i1 != 5){
+				temparray[i1] = t;
+				i1++;	
+				state = waitinsertlist;
+			}
+			else{
+				if(t == '*'){
+					state = setnewarray;
+					i1 = 0;
+				}
+				else{
+					state = insertlist;
+				}
+			}
+			break;
+		case waitinsertlist:
+			t = GetKeypadKey();
+			if(t == '\0'){
+				state = waitinsertlist;
+			}
+			else if(temparray[i1-1] == t){
+				state = waitinsertlist;
+			}
+			else{
+				state = insertlist;
+			}
+			break;
+		case setnewarray:
+			state = initial1;
+			break;
+		default:
+			state = initial1;
+			break;
+	}
+	switch(state){
+		case initial1:
+			break;
+		case waitinsert:
+			break;
+		case insertlist:
+			break;
+		case waitinsertlist:
+			break;
+		case setnewarray:
+			for(int three=0;three<6;three++){
+				array[three+1] = temparray[three];
+			}
+			temp = 0;
+			break;
+	}
+	return state;
+}
+
 int main(void){
 	DDRC = 0xF0; PORTC = 0x0F;
 	DDRB = 0x7F; PORTB = 0x00;
 	DDRA = 0x00; PORTA = 0xFF;
 
-	static task task1, task2, task3;
-	task *tasks[] = {&task1,&task2,&task3};
+	static task task1, task2, task3,task4;
+	task *tasks[] = {&task1,&task2,&task3,&task4};
 	const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
 	const char start = -1;
 	
@@ -241,6 +326,11 @@ int main(void){
 	task3.period = 200;
 	task3.elapsedTime = task3.period;
 	task3.TickFct = &play;
+
+	task4.state = start;
+	task4.period = 100;
+	task4.elapsedTime = task4.period;
+	task4.TickFct = &changepass;
 
 	unsigned long GCD = tasks[0]->period;
 	for (int i = 0; i < numTasks; i++){

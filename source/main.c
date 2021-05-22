@@ -15,7 +15,7 @@
 #include "simAVRHeader.h"
 #endif
 
-typedef struct task {
+typedef struct _task {
     signed char state;
     unsigned long int period;
     unsigned long int elapsedTime;
@@ -34,55 +34,76 @@ unsigned long int findGCD( unsigned long int a, unsigned long int b) {
     return 0;
 }
 
-enum states1 {start,checkinput,waitinput} state1;
+enum states1 {start,checkinput,waitinput,unlock};
 
-int tick(int state1){
+unsigned char array[6] = {'#','1','2','3','4','5'};
+unsigned char temp = 0;
+
+
+int tick(int state){
 	unsigned char x = GetKeypadKey();
-	switch(state1){
+	switch(state){
 		case start:
-			state1 = checkinput;
+			state = checkinput;
 			break;
 		case checkinput:
 			if(x == '\0'){
-				state1 = checkinput;
+				state = checkinput;
 			}
-			else{
-				state1 = waitinput;
+			//else if(x == '#' && temp != 0){
+			//	temp = 0;
+			//	state1 = checkinput;
+			//	PORTB = 0x00;
+			//}
+			else if(x == array[temp]){
+				if(temp == 5){
+					state = unlock;
+				}
+				else{
+					state = waitinput;
+					temp++;
+				}
 			}
 			break;
 		case waitinput:
 			if(x == '\0'){
-				state1 = checkinput;
+				state = checkinput;
 			}
 			else{
-				state1 = waitinput;
+				state = waitinput;
 			}
+			break;
+		case unlock:
+			state = checkinput;
 			break;
 	}
-	switch(state1){
+	switch(state){
 		case start:
 			break;
 		case checkinput:
-			PORTB = 0x00;
+			PORTB = 0x02;
 			break;
 		case waitinput:
-			PORTB = 0x80;
+			break;
+		case unlock:
+			temp = 0;
+			PORTB = 0x01;
 			break;
 	}
 }
 
 int main(void) {
     /* Insert DDR and PORT initializations */
-    DDRB = 0x00; PORTB = 0xFF;
+    DDRB = 0x7F; PORTB = 0x00;
     DDRC = 0xF0; PORTC = 0x0F;
 
     static task task1;
     task *tasks[] = {&task1};
-    const unsigned short numTasks = sizeof(tasks)/sizeof(*tasks);
+    const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
     const char start = -1;
 
     task1.state = start;
-    task1.period = 5;
+    task1.period = 10;
     task1.elapsedTime = task1.period;
     task1.TickFct = &tick;
 

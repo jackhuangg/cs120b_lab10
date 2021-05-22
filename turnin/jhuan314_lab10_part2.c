@@ -59,7 +59,7 @@ int keypad(int state){
 				}
 				state = checkinput;
 			}
-		break;
+			break;
 		case waitnext:
 			a = GetKeypadKey();
 			if(a == '\0'){
@@ -74,23 +74,23 @@ int keypad(int state){
 					temp = 0;
 				}
 			}
-		break;
+			break;
 		case unlock:
 			state = checkinput;
-		break;
+			break;
 		default:
 			state = checkinput;
-		break;
+			break;
 	}
 	switch(state){
 		case checkinput:
-		break;
+			break;
 		case waitnext:
-		break;
+			break;
 		case unlock:
 			PORTB = 0x01;
 			temp = 0;
-		break;
+			break;
 	}
 	return state;
 }
@@ -105,7 +105,7 @@ int lockdoor(int state){
 			else{
 				state = waitlock;
 			}
-		break;
+			break;
 		case lock:
 			if((~PINB & 0x80) == 0x80){
 				state = lock;
@@ -113,17 +113,17 @@ int lockdoor(int state){
 			else{
 				state = waitlock;
 			}
-		break;
+			break;
 		default:
 			state = waitlock;
-		break;
+			break;
 	}
 	switch(state){
 		case waitlock:
-		break;
+			break;
 		case lock:
 		PORTB = 0x00;
-		break;
+			break;
 	}
 	return state;
 }
@@ -154,15 +154,13 @@ int main(void){
 		GCD = findGCD(GCD,tasks[i]->period);
 	}
 
-	//set the timer and turn it on
 	TimerSet(GCD);
 	TimerOn();
-	
-	unsigned short i; //scheduler for loop iterator */
+
     	while (1) {
-		for (i = 0; i < numTasks; i++){ //scheduler code
-			if(tasks[i]->elapsedTime >= tasks[i]->period){ //task is ready to tick
-				tasks[i]->state = tasks[i]->TickFct(tasks[i]->state); //set next state
+		for (int i = 0; i < numTasks; i++){ 
+			if(tasks[i]->elapsedTime >= tasks[i]->period){ 
+				tasks[i]->state = tasks[i]->TickFct(tasks[i]->state); 
 				tasks[i]->elapsedTime = 0;
 			}
 			tasks[i]->elapsedTime += GCD;
